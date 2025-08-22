@@ -8,8 +8,9 @@ read -rp "Enter URL: " USER_URL
 
 # Use SpotDL to download if Spotify URL.
 if [[ $USER_URL == *"spot"* ]]; then
-  echo "Downloading from Spotify into dl_dir"
-  spotdl "$USER_URL" --lyrics genius musixmatch --ffmpeg-args "-c:a libmp3lame -b:a 192k"
+  echo "Spotify downloads disabled (for now)"
+#  echo "Downloading from Spotify into dl_dir"
+#  spotdl "$USER_URL" --lyrics genius musixmatch --ffmpeg-args "-c:a libmp3lame"
 fi
 
 # Use YT-DLP to download if YouTube URL.
