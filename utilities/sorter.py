@@ -1,44 +1,44 @@
 import os.path
 from mutagen.easyid3 import EasyID3
 
-HOME_DIRECTORY = os.path.expanduser("~")
+
 CURR_DIR = os.getcwd()
 DL_DIR = os.path.join(CURR_DIR, "dl_dir")
 DL_DIR_FILES = os.listdir(DL_DIR)
-MUSIC_DIR = os.path.join(HOME_DIRECTORY, "Music")
 
 
 if __name__ == "__main__":
-    print("Sorting files in dl_dir...")
+    print("Sorting files in dl_dir into artist/album folders...")
 
+    # Process each file in dl_dir
     for file in DL_DIR_FILES:
         FILE_PATH = os.path.join(DL_DIR, file)
-        FILE_NAME = FILE_PATH.split("/")[-1]
 
-        audio = EasyID3(FILE_PATH)
-        artist = audio["albumartist"][0]
-        album = audio["album"][0]
-        title = audio["title"][0]
+        # Skip if not a file
+        if not os.path.isfile(FILE_PATH):
+            print(f"Not a file: {FILE_PATH}")
+            continue
 
-        ARTIST_DIR = os.path.join(MUSIC_DIR, artist)
-        ALBUM_DIR = os.path.join(ARTIST_DIR, album)
+        # Read ID3 tags
+        try:
+            audio = EasyID3(FILE_PATH)
+            artist = audio.get("albumartist", ["Unknown Artist"])[0]
+            album = audio.get("album", ["Unknown Album"])[0]
+            title = audio.get("title", ["Unknown Title"])[0]
+        except Exception as e:
+            print(f"Skipping {FILE_PATH}: {e}")
+            continue
 
-        if not os.path.exists(ARTIST_DIR):
-            os.makedirs(ALBUM_DIR)
-        if not os.path.exists(ALBUM_DIR):
-            os.makedirs(ALBUM_DIR)
+        # Create artist/album directory structure inside dl_dir
+        artist_dir = os.path.join(DL_DIR, artist)
+        album_dir = os.path.join(artist_dir, album)
+        if not os.path.exists(album_dir):
+            os.makedirs(album_dir)
 
-        # Check if the title already exists in ALBUM_DIR
-        existing_titles = [
-            EasyID3(os.path.join(ALBUM_DIR, f))["title"][0]
-            for f in os.listdir(ALBUM_DIR)
-            if f.endswith(".mp3")
-        ]
-        if title not in existing_titles:
-            os.rename(FILE_PATH, os.path.join(ALBUM_DIR, FILE_NAME))
+        # Move file if not already present in album_dir
+        dest_path = os.path.join(album_dir, file)
+        if not os.path.exists(dest_path):
+            os.rename(FILE_PATH, dest_path)
+            print(f"Moved: {file} -> {artist}/{album}/")
         else:
-            print(f"{title} already in {ALBUM_DIR}, skipping.")
-
-    print("Cleaning dl_dir...")
-    for file in os.listdir(DL_DIR):
-        os.remove(os.path.join(DL_DIR, file))
+            print(f"File already exists in {artist}/{album}, skipping: {file}")
